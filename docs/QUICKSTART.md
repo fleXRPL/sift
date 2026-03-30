@@ -28,7 +28,7 @@ This starts, in parallel:
 ## 3. Confirm it works
 
 1. In the app, open **Settings** and pick a **records folder** (any empty test directory is fine).
-2. Optionally set **LLM** URL/model if you run a local OpenAI-compatible server (for example `http://127.0.0.1:8080/v1` and your model id).
+2. **Local LLM (Ollama):** Sift defaults to **Ollama’s** OpenAI-compatible API at **`http://127.0.0.1:11434/v1`** and model **`llama3.2`**. If you use Ollama Desktop, leave that (or click **Use Ollama defaults**) and set **Model id** to a tag from `ollama list` (for example `llama3.2:latest`). Other servers (LM Studio, `llama-server`, etc.) often use a different host/port—set **Base URL** and **Model id** to match.
 3. Drop a small **FHIR JSON** or **`.txt`** HL7 sample into that folder, or use the API later for manual paths.
 
 The **Dashboard** should show the orchestrator as online when `GET /health` succeeds.
