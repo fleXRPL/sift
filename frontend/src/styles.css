@@ -11,8 +11,3 @@
   }
 }
 
-@layer utilities {
-  .print-sheet {
-    @apply max-w-3xl mx-auto bg-white text-slate-900 p-10 shadow-none;
-  }
-}

@@ -5,6 +5,7 @@ const OLLAMA_DEFAULT_MODEL = "llama3.2";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { api, type DocumentDetail, type DocumentRow, type Health, type Settings } from "./api";
+import { printClinicalReport } from "./printReport";
 import { isTauriRuntime } from "./tauri-env";
 
 type Tab = "dashboard" | "documents" | "settings";
@@ -166,7 +167,7 @@ export default function App() {
               <Stat
                 title="LLM endpoint"
                 value={settings?.llm_base_url ? "Set" : "Default"}
-                hint={settings?.llm_base_url ?? "http://127.0.0.1:8080"}
+                hint={settings?.llm_base_url ?? "http://127.0.0.1:11434/v1"}
                 good
               />
             </div>
@@ -244,7 +245,7 @@ export default function App() {
         )}
       </main>
 
-      <footer className="border-t border-slate-800/80 py-4 text-center text-xs text-slate-600 print:hidden">
+      <footer className="border-t border-slate-800/80 py-4 text-center text-xs text-slate-400 print:hidden">
         Local-only processing · No cloud · HIPAA-aligned deployment on your network
       </footer>
     </div>
@@ -359,47 +360,52 @@ function SettingsForm(props: {
 function ReportCard(props: { detail: DocumentDetail; onClose: () => void }) {
   const d = props.detail;
   return (
-    <article className="rounded-xl border border-slate-800 bg-slate-900/40 overflow-hidden print:border-slate-300 print:bg-white print:shadow-none">
-      <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-800 print:border-slate-200">
+    <article className="rounded-xl border border-slate-700 bg-slate-950/50 overflow-hidden shadow-lg">
+      <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-slate-700 bg-slate-900/80">
         <div>
-          <h3 className="text-base font-semibold text-white print:text-slate-900">{d.file_name}</h3>
-          <p className="text-xs text-slate-500 mt-1 print:text-slate-600">
+          <h3 className="text-base font-semibold text-slate-100">{d.file_name}</h3>
+          <p className="text-xs text-slate-400 mt-1">
             {d.source_type} · {new Date(d.created_at).toLocaleString()}
             {d.confidence != null && ` · Confidence ${Math.round(d.confidence * 100)}%`}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="text-xs rounded-md border border-slate-600 px-3 py-1.5 text-slate-300 hover:bg-slate-800 print:hidden"
-        >
-          Print report
-        </button>
-        <button
-          type="button"
-          onClick={props.onClose}
-          className="text-xs text-slate-500 hover:text-white print:hidden"
-        >
-          Close
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => printClinicalReport(d)}
+            className="text-xs rounded-md border border-clinical-teal/50 bg-clinical-teal/15 px-3 py-1.5 text-clinical-teal hover:bg-clinical-teal/25"
+          >
+            Print report
+          </button>
+          <button
+            type="button"
+            onClick={props.onClose}
+            className="text-xs text-slate-400 hover:text-white px-2"
+          >
+            Close
+          </button>
+        </div>
       </div>
-      <div className="px-6 py-6 space-y-6 print-sheet print:block">
+      <div className="bg-slate-50 text-slate-900 px-5 py-5 space-y-6 border-t border-slate-200/80">
         <section>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 print:text-slate-600">
-            Clinical synthesis
-          </h4>
-          <div className="mt-2 prose prose-invert max-w-none text-sm leading-relaxed text-slate-200 print:prose-slate print:text-slate-800 whitespace-pre-wrap">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-600">Clinical synthesis</h4>
+          <p className="mt-1 text-xs text-slate-500 leading-snug">
+            Text extracted from your file, then summarized by your local LLM (e.g. Ollama). Verify against the
+            original record before clinical use.
+          </p>
+          <div className="mt-3 text-sm leading-relaxed text-slate-800 whitespace-pre-wrap">
             {d.summary_text ?? "No summary available."}
           </div>
           {d.error_message && (
-            <p className="mt-3 text-sm text-rose-300 print:text-rose-700">{d.error_message}</p>
+            <p className="mt-3 text-sm text-rose-700 font-medium bg-rose-50 border border-rose-200 rounded-md px-3 py-2">
+              {d.error_message}
+            </p>
           )}
         </section>
         <section>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 print:text-slate-600">
-            Extracted context (preview)
-          </h4>
-          <pre className="mt-2 text-xs bg-slate-950/80 border border-slate-800 rounded-lg p-3 overflow-auto max-h-48 text-slate-400 print:text-slate-700 print:bg-slate-50 print:border-slate-200">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-600">Extracted context (preview)</h4>
+          <p className="mt-1 text-xs text-slate-500">Raw text or structured fields passed to the model (truncated).</p>
+          <pre className="mt-2 text-xs bg-white border border-slate-200 rounded-lg p-3 overflow-auto max-h-64 text-slate-700 shadow-inner">
             {(d.raw_preview ?? "").slice(0, 8000)}
           </pre>
         </section>
