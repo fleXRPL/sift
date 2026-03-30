@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+
+const OLLAMA_DEFAULT_BASE = "http://127.0.0.1:11434/v1";
+const OLLAMA_DEFAULT_MODEL = "llama3.2";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { api, type DocumentDetail, type DocumentRow, type Health, type Settings } from "./api";
@@ -267,6 +270,12 @@ function SettingsForm(props: {
 }) {
   const [url, setUrl] = useState(props.settings.llm_base_url);
   const [model, setModel] = useState(props.settings.llm_model);
+
+  useEffect(() => {
+    setUrl(props.settings.llm_base_url);
+    setModel(props.settings.llm_model);
+  }, [props.settings.llm_base_url, props.settings.llm_model]);
+
   return (
     <section className="max-w-xl space-y-6 print:hidden">
       <h2 className="text-lg font-semibold text-white">Settings</h2>
@@ -289,23 +298,48 @@ function SettingsForm(props: {
         </div>
       </div>
       <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
-        <label className="block text-sm font-medium text-slate-300">Local LLM (OpenAI-compatible)</label>
-        <p className="text-xs text-slate-500">
-          Point to <code className="text-clinical-teal">llama-server</code>, Ollama, LM Studio, or any
-          OpenAI-compatible URL on this machine.
+        <label className="block text-sm font-medium text-slate-300">Local LLM (OpenAI-compatible API)</label>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          The app does not bundle model weights. It calls your local server using the same shape as OpenAI chat
+          completions (<code className="text-clinical-teal">/v1/chat/completions</code>).{" "}
+          <strong className="text-slate-400">Ollama</strong> listens on{" "}
+          <code className="text-clinical-teal">127.0.0.1:11434</code> by default (not 8080). Use the base URL
+          below and a model name from <code className="text-clinical-teal">ollama list</code>.
         </p>
-        <input
-          className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="http://127.0.0.1:8080/v1"
-        />
-        <input
-          className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          placeholder="model id"
-        />
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="rounded-md border border-slate-600 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
+            onClick={() => {
+              setUrl(OLLAMA_DEFAULT_BASE);
+              setModel(OLLAMA_DEFAULT_MODEL);
+            }}
+          >
+            Use Ollama defaults
+          </button>
+        </div>
+        <div>
+          <span className="text-xs text-slate-500">Base URL</span>
+          <input
+            className="mt-1 w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm font-mono"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder={OLLAMA_DEFAULT_BASE}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
+        <div>
+          <span className="text-xs text-slate-500">Model id</span>
+          <input
+            className="mt-1 w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm font-mono"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            placeholder={OLLAMA_DEFAULT_MODEL}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
         <button
           type="button"
           onClick={() => props.onSaveLlm(url, model)}
@@ -313,6 +347,10 @@ function SettingsForm(props: {
         >
           Save LLM settings
         </button>
+        <p className="text-xs text-slate-600">
+          After saving, drop a new file or re-copy an existing file into the watch folder to regenerate a summary
+          with the LLM. Existing rows keep their stored text until re-ingested.
+        </p>
       </div>
     </section>
   );

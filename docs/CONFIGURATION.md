@@ -40,7 +40,7 @@ These are exposed via `GET/POST /api/settings` and the UI:
 | `llm_base_url` | Base URL for chat completions (often ends with `/v1`)         |
 | `llm_model`    | Model name passed to the LLM API                              |
 
-Defaults in code if unset: see `backend/src/index.ts` for current defaults.
+Defaults if unset (also used by the UI): **`http://127.0.0.1:11434/v1`** and **`llama3.2`** — aligned with **Ollama**’s OpenAI-compatible API on port **11434** (not 8080). See `backend/src/llmDefaults.ts`. Adjust the model to match `ollama list` on your machine (for example `mistral`, `qwen2.5:14b`).
 
 ## LLM endpoint shape
 

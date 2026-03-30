@@ -4,6 +4,7 @@ import type { Database } from "better-sqlite3";
 import { z } from "zod";
 import { getSetting, setSetting } from "./db";
 import { ingestFile } from "./ingest";
+import { DEFAULT_LLM_BASE_URL, DEFAULT_LLM_MODEL } from "./llmDefaults";
 
 export function createApp(db: Database) {
   const app = express();
@@ -24,8 +25,8 @@ export function createApp(db: Database) {
   app.get("/api/settings", (_req, res) => {
     const rawWatch = getSetting(db, "watch_folder");
     const watch_folder = rawWatch && rawWatch.length > 0 ? rawWatch : null;
-    const llm_base_url = getSetting(db, "llm_base_url") ?? "http://127.0.0.1:8080/v1";
-    const llm_model = getSetting(db, "llm_model") ?? "local-model";
+    const llm_base_url = getSetting(db, "llm_base_url") ?? DEFAULT_LLM_BASE_URL;
+    const llm_model = getSetting(db, "llm_model") ?? DEFAULT_LLM_MODEL;
     res.json({
       watch_folder,
       llm_base_url,
@@ -47,8 +48,8 @@ export function createApp(db: Database) {
     const watch_folder = wf && wf.length > 0 ? wf : null;
     res.json({
       watch_folder,
-      llm_base_url: getSetting(db, "llm_base_url") ?? "http://127.0.0.1:8080/v1",
-      llm_model: getSetting(db, "llm_model") ?? "local-model",
+      llm_base_url: getSetting(db, "llm_base_url") ?? DEFAULT_LLM_BASE_URL,
+      llm_model: getSetting(db, "llm_model") ?? DEFAULT_LLM_MODEL,
     });
   });
 

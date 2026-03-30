@@ -7,6 +7,7 @@ import { extractFromHl7, looksLikeHl7 } from "./pipelines/hl7";
 import { extractTextFromPdf } from "./pipelines/pdf";
 import { getSetting } from "./db";
 import { heuristicSummary, synthesizeClinical } from "./llm";
+import { DEFAULT_LLM_BASE_URL, DEFAULT_LLM_MODEL } from "./llmDefaults";
 
 export type IngestResult = {
   documentId: string;
@@ -91,9 +92,8 @@ export async function ingestFile(db: Database.Database, filePath: string): Promi
   const kind = ext === ".pdf" ? "pdf" : detectKind(normalized, rawText);
   const ctx = await buildContext(kind, normalized, rawText);
 
-  const llmBase =
-    getSetting(db, "llm_base_url") ?? process.env.SIFT_LLM_BASE_URL ?? "http://127.0.0.1:8080/v1";
-  const llmModel = getSetting(db, "llm_model") ?? process.env.SIFT_LLM_MODEL ?? "gpt-oss-20b";
+  const llmBase = getSetting(db, "llm_base_url") ?? process.env.SIFT_LLM_BASE_URL ?? DEFAULT_LLM_BASE_URL;
+  const llmModel = getSetting(db, "llm_model") ?? process.env.SIFT_LLM_MODEL ?? DEFAULT_LLM_MODEL;
 
   let summary: string;
   let confidence = ctx.baseConfidence;

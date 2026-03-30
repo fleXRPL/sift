@@ -28,7 +28,7 @@ describe("createApp HTTP API", () => {
     const app = createApp(db);
     const res = await request(app).get("/api/settings").expect(200);
     expect(res.body.watch_folder).toBeNull();
-    expect(res.body.llm_base_url).toContain("8080");
+    expect(res.body.llm_base_url).toContain("11434");
     expect(res.body.llm_model).toBeTruthy();
   });
 
