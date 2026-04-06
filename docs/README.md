@@ -27,3 +27,5 @@ Welcome to the documentation for **Sift**, a local-first clinical intelligence d
 ## Repository root
 
 The top-level [README](../README.md) stays a short overview; deeper detail lives in this folder.
+
+![Sift](../img/sift-app.png)

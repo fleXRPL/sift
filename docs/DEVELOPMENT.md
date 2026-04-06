@@ -4,29 +4,29 @@ How to work on Sift day to day: scripts, processes, ports, and debugging.
 
 ## The `sift` CLI
 
-`sift.mjs` is the single entry point for all day-to-day operations.  Run it
+`sift.mjs` is the single entry point for all day-to-day operations. Run it
 with `node sift.mjs <command>` or use the npm shortcuts below.
 
-| Command / npm alias                        | What it does                                                                      |
-| ------------------------------------------ | --------------------------------------------------------------------------------- |
-| `node sift.mjs run` / `npm start`          | Pre-flight check, then starts backend + frontend + Tauri together.                |
-| `node sift.mjs debug` / `npm run debug`    | Same as `run` with `DEBUG=sift:*` and `RUST_LOG=debug`.                           |
-| `node sift.mjs check` / `npm run check`    | Verify Node, Rust, npm deps, Ollama, and model — without starting anything.       |
-| `node sift.mjs deps` / `npm run deps`      | `npm install` in root, frontend, and backend.                                     |
-| `node sift.mjs stop` / `npm run stop`      | Kill processes on ports 4000 and 1420.                                            |
-| `node sift.mjs help`                       | Full CLI reference.                                                               |
+| Command / npm alias                     | What it does                                                                |
+| --------------------------------------- | --------------------------------------------------------------------------- |
+| `node sift.mjs run` / `npm start`       | Pre-flight check, then starts backend + frontend + Tauri together.          |
+| `node sift.mjs debug` / `npm run debug` | Same as `run` with `DEBUG=sift:*` and `RUST_LOG=debug`.                     |
+| `node sift.mjs check` / `npm run check` | Verify Node, Rust, npm deps, Ollama, and model — without starting anything. |
+| `node sift.mjs deps` / `npm run deps`   | `npm install` in root, frontend, and backend.                               |
+| `node sift.mjs stop` / `npm run stop`   | Kill processes on ports 4000 and 1420.                                      |
+| `node sift.mjs help`                    | Full CLI reference.                                                         |
 
 ## Other top-level scripts
 
-| Script                 | What it does                                                                                                                                  |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`          | Runs backend, frontend, and Tauri together via `concurrently` (no pre-flight check — use `run` for daily work).                               |
-| `npm run build`        | Builds frontend (`vite build`), compiles backend TypeScript (`tsc`), then runs **`cross-env CI=false npx tauri build`** for a release bundle. |
-| `npm run tauri`        | Pass-through to `@tauri-apps/cli` (for example `npm run tauri -- --help`).                                                                    |
-| `npm run lint:backend` | `tsc --noEmit` in `backend/`.                                                                                                                 |
-| `npm test`             | Backend Jest + frontend Vitest.                                                                                                               |
-| `npm run test:backend` | Jest only (`backend/`).                                                                                                                       |
-| `npm run test:frontend`| Vitest only (`frontend/`).                                                                                                                    |
+| Script                  | What it does                                                                                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`           | Runs backend, frontend, and Tauri together via `concurrently` (no pre-flight check — use `run` for daily work).                               |
+| `npm run build`         | Builds frontend (`vite build`), compiles backend TypeScript (`tsc`), then runs **`cross-env CI=false npx tauri build`** for a release bundle. |
+| `npm run tauri`         | Pass-through to `@tauri-apps/cli` (for example `npm run tauri -- --help`).                                                                    |
+| `npm run lint:backend`  | `tsc --noEmit` in `backend/`.                                                                                                                 |
+| `npm test`              | Backend Jest + frontend Vitest.                                                                                                               |
+| `npm run test:backend`  | Jest only (`backend/`).                                                                                                                       |
+| `npm run test:frontend` | Vitest only (`frontend/`).                                                                                                                    |
 
 ## Package-local scripts
 
@@ -51,10 +51,10 @@ with `node sift.mjs <command>` or use the npm shortcuts below.
 
 ## Processes and ports
 
-| Service           | Default bind     | Purpose                                          |
-| ----------------- | ---------------- | ------------------------------------------------ |
-| Node orchestrator | `127.0.0.1:4000` | REST API, SQLite, ingest                         |
-| Vite (dev)        | `localhost:1420` | UI for `tauri dev`                               |
+| Service           | Default bind     | Purpose                                                      |
+| ----------------- | ---------------- | ------------------------------------------------------------ |
+| Node orchestrator | `127.0.0.1:4000` | REST API, SQLite, ingest                                     |
+| Vite (dev)        | `localhost:1420` | UI for `tauri dev`                                           |
 | LLM (optional)    | user-defined     | OpenAI-compatible server; default `127.0.0.1:11434` (Ollama) |
 
 Set `PORT` to change the backend port (see [Configuration](CONFIGURATION.md)).

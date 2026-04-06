@@ -53,8 +53,8 @@ export default function App() {
     void refreshHealth();
     void refreshSettings();
     void refreshDocs();
-    const id = window.setInterval(() => void refreshHealth(), 8000);
-    return () => window.clearInterval(id);
+    const id = globalThis.setInterval(() => void refreshHealth(), 8000);
+    return () => globalThis.clearInterval(id);
   }, [refreshHealth, refreshSettings, refreshDocs]);
 
   useEffect(() => {
@@ -103,17 +103,17 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      <header className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur sticky top-0 z-10 print:hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-sky-50 via-white to-teal-50/40">
+      <header className="border-b border-clinical-border bg-white/90 backdrop-blur sticky top-0 z-10 print:hidden shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img src="/sift-icon.svg" alt="" className="h-9 w-9 rounded-full" />
             <div>
-              <h1 className="text-lg font-semibold tracking-tight text-white">Sift</h1>
-              <p className="text-xs text-slate-500">Local clinical intelligence</p>
+              <h1 className="text-lg font-semibold tracking-tight text-slate-800">Sift</h1>
+              <p className="text-xs text-slate-400">Local clinical intelligence</p>
             </div>
           </div>
-          <nav className="flex gap-1 rounded-lg bg-slate-900/80 p-1 border border-slate-800">
+          <nav className="flex gap-1 rounded-lg bg-slate-100 p-1 border border-clinical-border">
             {(
               [
                 ["dashboard", "Dashboard"],
@@ -127,8 +127,8 @@ export default function App() {
                 onClick={() => setTab(id)}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                   tab === id
-                    ? "bg-clinical-navy text-clinical-teal shadow"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-clinical-teal text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-white"
                 }`}
               >
                 {label}
@@ -140,13 +140,10 @@ export default function App() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-8 print:max-w-none print:px-0 print:py-0">
         {err && (
-          <div
-            className="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-100 text-sm print:hidden"
-            role="status"
-          >
+          <output className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800 text-sm print:hidden block">
             <strong className="font-semibold">Orchestrator:</strong> {err}. Start the backend or wait for
             it to finish starting.
-          </div>
+          </output>
         )}
 
         {tab === "dashboard" && (
@@ -172,15 +169,15 @@ export default function App() {
               />
             </div>
             {watchHint && (
-              <p className="text-sm text-slate-400 border border-slate-800 rounded-lg px-4 py-3 bg-slate-900/50">
+              <p className="text-sm text-slate-500 border border-clinical-border rounded-lg px-4 py-3 bg-white">
                 {watchHint}
               </p>
             )}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
-              <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-2">
+            <div className="rounded-xl border border-clinical-border bg-white p-6 shadow-sm">
+              <h2 className="text-sm font-semibold text-clinical-sage uppercase tracking-wide mb-2">
                 Zero-click workflow
               </h2>
-              <p className="text-slate-400 text-sm leading-relaxed max-w-2xl">
+              <p className="text-slate-500 text-sm leading-relaxed max-w-2xl">
                 Drop FHIR JSON, HL7 text exports, or clinical PDFs into your watch folder. Sift detects
                 the format, extracts structured facts where possible, and asks your local model for a
                 concise narrative with confidence scoring. Nothing leaves this machine.
@@ -193,7 +190,7 @@ export default function App() {
           <section className="grid gap-6 lg:grid-cols-5 print:block">
             <div className="lg:col-span-2 space-y-2 print:hidden">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-semibold text-slate-300">Ingested files</h2>
+                <h2 className="text-sm font-semibold text-slate-600">Ingested files</h2>
                 <button
                   type="button"
                   onClick={() => void refreshDocs()}
@@ -202,21 +199,21 @@ export default function App() {
                   Refresh
                 </button>
               </div>
-              <ul className="rounded-xl border border-slate-800 divide-y divide-slate-800/80 max-h-[60vh] overflow-auto bg-slate-900/30">
+              <ul className="rounded-xl border border-clinical-border divide-y divide-clinical-border max-h-[60vh] overflow-auto bg-white shadow-sm">
                 {docs.length === 0 && (
-                  <li className="px-4 py-8 text-sm text-slate-500 text-center">No documents yet.</li>
+                  <li className="px-4 py-8 text-sm text-slate-400 text-center">No documents yet.</li>
                 )}
                 {docs.map((d) => (
                   <li key={d.id}>
                     <button
                       type="button"
                       onClick={() => setSelectedId(d.id)}
-                      className={`w-full text-left px-4 py-3 text-sm transition hover:bg-slate-800/50 ${
-                        selectedId === d.id ? "bg-slate-800/70 border-l-2 border-clinical-teal" : ""
+                      className={`w-full text-left px-4 py-3 text-sm transition hover:bg-clinical-mint ${
+                        selectedId === d.id ? "bg-clinical-teal2 border-l-2 border-clinical-teal" : ""
                       }`}
                     >
-                      <div className="font-medium text-slate-100 truncate">{d.file_name}</div>
-                      <div className="text-xs text-slate-500 mt-0.5">
+                      <div className="font-medium text-slate-700 truncate">{d.file_name}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">
                         {d.source_type} · {d.status}
                         {d.confidence != null && ` · ${Math.round(d.confidence * 100)}% conf.`}
                       </div>
@@ -227,7 +224,7 @@ export default function App() {
             </div>
             <div className="lg:col-span-3 print:col-span-full">
               {!detail && (
-                <div className="rounded-xl border border-dashed border-slate-700 px-6 py-16 text-center text-slate-500 text-sm print:hidden">
+                <div className="rounded-xl border border-dashed border-clinical-border px-6 py-16 text-center text-slate-400 text-sm print:hidden bg-white/60">
                   Select a document to view synthesis and sources.
                 </div>
               )}
@@ -245,30 +242,30 @@ export default function App() {
         )}
       </main>
 
-      <footer className="border-t border-slate-800/80 py-4 text-center text-xs text-slate-400 print:hidden">
+      <footer className="border-t border-clinical-border py-4 text-center text-xs text-slate-400 print:hidden bg-white/60">
         Local-only processing · No cloud · HIPAA-aligned deployment on your network
       </footer>
     </div>
   );
 }
 
-function Stat(props: { title: string; value: string; hint?: string; good: boolean }) {
+function Stat(props: Readonly<{ title: string; value: string; hint?: string; good: boolean }>) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-3">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{props.title}</div>
-      <div className={`text-lg font-semibold mt-1 ${props.good ? "text-emerald-400" : "text-rose-400"}`}>
+    <div className="rounded-xl border border-clinical-border bg-white px-4 py-4 shadow-sm">
+      <div className="text-xs uppercase tracking-wide text-slate-400 font-medium">{props.title}</div>
+      <div className={`text-lg font-semibold mt-1 ${props.good ? "text-clinical-teal" : "text-rose-400"}`}>
         {props.value}
       </div>
-      {props.hint && <div className="text-xs text-slate-500 mt-1 truncate" title={props.hint}>{props.hint}</div>}
+      {props.hint && <div className="text-xs text-slate-400 mt-1 truncate" title={props.hint}>{props.hint}</div>}
     </div>
   );
 }
 
-function SettingsForm(props: {
+function SettingsForm(props: Readonly<{
   settings: Settings;
   onPickFolder: () => void;
   onSaveLlm: (url: string, model: string) => void;
-}) {
+}>) {
   const [url, setUrl] = useState(props.settings.llm_base_url);
   const [model, setModel] = useState(props.settings.llm_model);
 
@@ -279,38 +276,39 @@ function SettingsForm(props: {
 
   return (
     <section className="max-w-xl space-y-6 print:hidden">
-      <h2 className="text-lg font-semibold text-white">Settings</h2>
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
-        <label className="block text-sm font-medium text-slate-300">Records folder</label>
-        <p className="text-xs text-slate-500">
+      <h2 className="text-lg font-semibold text-slate-800">Settings</h2>
+      <div className="rounded-xl border border-clinical-border bg-white p-5 space-y-3 shadow-sm">
+        <p className="block text-sm font-medium text-slate-700">Records folder</p>
+        <p className="text-xs text-slate-400">
           Monitored by the desktop host. New files trigger ingestion automatically.
         </p>
         <div className="flex flex-wrap gap-2 items-center">
           <button
             type="button"
+            aria-label="Choose records folder"
             onClick={props.onPickFolder}
-            className="rounded-lg bg-clinical-teal/20 text-clinical-teal border border-clinical-teal/40 px-4 py-2 text-sm font-medium hover:bg-clinical-teal/30"
+            className="rounded-lg bg-clinical-teal2 text-clinical-teal border border-clinical-border px-4 py-2 text-sm font-medium hover:bg-clinical-mint transition"
           >
             Choose folder…
           </button>
-          <span className="text-xs text-slate-500 truncate max-w-full" title={props.settings.watch_folder ?? ""}>
+          <span className="text-xs text-slate-400 truncate max-w-full" title={props.settings.watch_folder ?? ""}>
             {props.settings.watch_folder ?? "None selected"}
           </span>
         </div>
       </div>
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
-        <label className="block text-sm font-medium text-slate-300">Local LLM (OpenAI-compatible API)</label>
+      <div className="rounded-xl border border-clinical-border bg-white p-5 space-y-3 shadow-sm">
+        <p className="block text-sm font-medium text-slate-700">Local LLM (OpenAI-compatible API)</p>
         <p className="text-xs text-slate-500 leading-relaxed">
           The app does not bundle model weights. It calls your local server using the same shape as OpenAI chat
           completions (<code className="text-clinical-teal">/v1/chat/completions</code>).{" "}
-          <strong className="text-slate-400">Ollama</strong> listens on{" "}
+          <strong className="text-slate-600">Ollama</strong> listens on{" "}
           <code className="text-clinical-teal">127.0.0.1:11434</code> by default (not 8080). Use the base URL
           below and a model name from <code className="text-clinical-teal">ollama list</code>.
         </p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-md border border-slate-600 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
+            className="rounded-md border border-clinical-border bg-clinical-warm px-3 py-1.5 text-xs text-slate-600 hover:bg-clinical-mint transition"
             onClick={() => {
               setUrl(OLLAMA_DEFAULT_BASE);
               setModel(OLLAMA_DEFAULT_MODEL);
@@ -320,9 +318,9 @@ function SettingsForm(props: {
           </button>
         </div>
         <div>
-          <span className="text-xs text-slate-500">Base URL</span>
+          <span className="text-xs text-slate-500 font-medium">Base URL</span>
           <input
-            className="mt-1 w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm font-mono"
+            className="mt-1 w-full rounded-lg bg-clinical-warm border border-clinical-border px-3 py-2 text-sm font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-clinical-teal/30"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder={OLLAMA_DEFAULT_BASE}
@@ -331,9 +329,9 @@ function SettingsForm(props: {
           />
         </div>
         <div>
-          <span className="text-xs text-slate-500">Model id</span>
+          <span className="text-xs text-slate-500 font-medium">Model id</span>
           <input
-            className="mt-1 w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm font-mono"
+            className="mt-1 w-full rounded-lg bg-clinical-warm border border-clinical-border px-3 py-2 text-sm font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-clinical-teal/30"
             value={model}
             onChange={(e) => setModel(e.target.value)}
             placeholder={OLLAMA_DEFAULT_MODEL}
@@ -344,11 +342,11 @@ function SettingsForm(props: {
         <button
           type="button"
           onClick={() => props.onSaveLlm(url, model)}
-          className="rounded-lg bg-slate-100 text-slate-900 px-4 py-2 text-sm font-semibold hover:bg-white"
+          className="rounded-lg bg-clinical-teal text-white px-4 py-2 text-sm font-semibold hover:opacity-90 transition"
         >
           Save LLM settings
         </button>
-        <p className="text-xs text-slate-600">
+        <p className="text-xs text-slate-400">
           After saving, drop a new file or re-copy an existing file into the watch folder to regenerate a summary
           with the LLM. Existing rows keep their stored text until re-ingested.
         </p>
@@ -357,13 +355,13 @@ function SettingsForm(props: {
   );
 }
 
-function ReportCard(props: { detail: DocumentDetail; onClose: () => void }) {
+function ReportCard(props: Readonly<{ detail: DocumentDetail; onClose: () => void }>) {
   const d = props.detail;
   return (
-    <article className="rounded-xl border border-slate-700 bg-slate-950/50 overflow-hidden shadow-lg">
-      <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-slate-700 bg-slate-900/80">
+    <article className="rounded-xl border border-clinical-border bg-white overflow-hidden shadow-md">
+      <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-clinical-border bg-clinical-warm">
         <div>
-          <h3 className="text-base font-semibold text-slate-100">{d.file_name}</h3>
+          <h3 className="text-base font-semibold text-slate-800">{d.file_name}</h3>
           <p className="text-xs text-slate-400 mt-1">
             {d.source_type} · {new Date(d.created_at).toLocaleString()}
             {d.confidence != null && ` · Confidence ${Math.round(d.confidence * 100)}%`}
@@ -373,27 +371,27 @@ function ReportCard(props: { detail: DocumentDetail; onClose: () => void }) {
           <button
             type="button"
             onClick={() => printClinicalReport(d)}
-            className="text-xs rounded-md border border-clinical-teal/50 bg-clinical-teal/15 px-3 py-1.5 text-clinical-teal hover:bg-clinical-teal/25"
+            className="text-xs rounded-md border border-clinical-border bg-clinical-teal2 px-3 py-1.5 text-clinical-teal hover:bg-clinical-mint transition"
           >
             Print report
           </button>
           <button
             type="button"
             onClick={props.onClose}
-            className="text-xs text-slate-400 hover:text-white px-2"
+            className="text-xs text-slate-400 hover:text-slate-700 px-2 transition"
           >
             Close
           </button>
         </div>
       </div>
-      <div className="bg-slate-50 text-slate-900 px-5 py-5 space-y-6 border-t border-slate-200/80">
+      <div className="bg-white text-slate-900 px-5 py-5 space-y-6">
         <section>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-600">Clinical synthesis</h4>
-          <p className="mt-1 text-xs text-slate-500 leading-snug">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-clinical-sage">Clinical synthesis</h4>
+          <p className="mt-1 text-xs text-slate-400 leading-snug">
             Text extracted from your file, then summarized by your local LLM (e.g. Ollama). Verify against the
             original record before clinical use.
           </p>
-          <div className="mt-3 text-sm leading-relaxed text-slate-800 whitespace-pre-wrap">
+          <div className="mt-3 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
             {d.summary_text ?? "No summary available."}
           </div>
           {d.error_message && (
@@ -403,9 +401,9 @@ function ReportCard(props: { detail: DocumentDetail; onClose: () => void }) {
           )}
         </section>
         <section>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-600">Extracted context (preview)</h4>
-          <p className="mt-1 text-xs text-slate-500">Raw text or structured fields passed to the model (truncated).</p>
-          <pre className="mt-2 text-xs bg-white border border-slate-200 rounded-lg p-3 overflow-auto max-h-64 text-slate-700 shadow-inner">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-clinical-sage">Extracted context (preview)</h4>
+          <p className="mt-1 text-xs text-slate-400">Raw text or structured fields passed to the model (truncated).</p>
+          <pre className="mt-2 text-xs bg-clinical-warm border border-clinical-border rounded-lg p-3 overflow-auto max-h-64 text-slate-600 shadow-inner">
             {(d.raw_preview ?? "").slice(0, 8000)}
           </pre>
         </section>
