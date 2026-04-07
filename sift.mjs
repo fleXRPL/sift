@@ -98,25 +98,18 @@ async function prompt(question) {
 
 // ─── check command ────────────────────────────────────────────────────────────
 
-async function runCheck(opts = {}) {
-  const { quiet = false } = opts;
-  const issues = [];
-  let ollamaOk = false;
-  let modelOk = false;
-
-  if (!quiet) header("Pre-flight checks");
-
-  // Node
+function checkNode(issues) {
   const nodeVer = commandVersion("node --version");
-  const nodeMaj = nodeVer ? parseInt(nodeVer.replace("v", ""), 10) : 0;
+  const nodeMaj = nodeVer ? Number.parseInt(nodeVer.replace("v", ""), 10) : 0;
   if (nodeMaj >= 18) {
     log("ok", `Node.js ${nodeVer}`);
   } else {
     log("fail", `Node.js not found or < 18 (found: ${nodeVer ?? "none"})`);
     issues.push("Node.js 18+ required");
   }
+}
 
-  // Rust
+function checkRust(issues) {
   const rustVer = commandVersion("rustc --version");
   if (rustVer) {
     log("ok", `Rust: ${rustVer}`);
@@ -124,12 +117,12 @@ async function runCheck(opts = {}) {
     log("warn", "rustc not found — Tauri host cannot be compiled");
     issues.push("rustc not found");
   }
+}
 
-  // npm deps
+function checkDeps(issues) {
   const depsRoot = depsInstalled(ROOT);
   const depsFront = depsInstalled(join(ROOT, "frontend"));
   const depsBack = depsInstalled(join(ROOT, "backend"));
-
   if (depsRoot && depsFront && depsBack) {
     log("ok", "npm dependencies installed (root, frontend, backend)");
   } else {
@@ -140,34 +133,58 @@ async function runCheck(opts = {}) {
     log("info", `Run ${BOLD}node sift.mjs deps${RESET} to install`);
     issues.push(`npm deps missing: ${missing}`);
   }
+}
 
-  // Ollama
+function modelMatchLabel(found, configured) {
+  if (found === configured) return "";
+  return dim(` (configured: ${configured})`);
+}
+
+function modelAvailableList(ids) {
+  const preview = ids.slice(0, 6).join(", ");
+  const extra = ids.length > 6 ? ` +${ids.length - 6} more` : "";
+  return `${preview}${extra}`;
+}
+
+async function checkOllama(issues) {
   const models = await fetchJson(`${OLLAMA_BASE}/v1/models`);
-  if (models?.data) {
-    ollamaOk = true;
-    const ids = models.data.map((m) => m.id);
-    log("ok", `Ollama reachable at ${OLLAMA_BASE} — ${ids.length} model(s) available`);
-
-    // Find a model that matches the default or any clinical-sounding one
-    const configured = process.env.SIFT_LLM_MODEL ?? OLLAMA_DEFAULT_MODEL;
-    const exact = ids.find((id) => id === configured);
-    const partial = ids.find((id) => id.startsWith(configured.split(":")[0]));
-    const found = exact ?? partial;
-
-    if (found) {
-      modelOk = true;
-      log("ok", `Model available: ${BOLD}${found}${RESET}${found !== configured ? dim(` (configured: ${configured})`) : ""}`);
-    } else {
-      log("warn", `Model ${BOLD}${configured}${RESET} not found in Ollama`);
-      log("info", `Available: ${ids.slice(0, 6).join(", ")}${ids.length > 6 ? ` +${ids.length - 6} more` : ""}`);
-      log("info", `Run: ${BOLD}ollama pull ${configured}${RESET}  or change model in Settings`);
-      issues.push(`Model "${configured}" not in Ollama`);
-    }
-  } else {
+  if (!models?.data) {
     log("fail", `Ollama not reachable at ${OLLAMA_BASE}`);
-    log("info", "Start Ollama Desktop or: " + BOLD + "ollama serve" + RESET);
+    log("info", `Start Ollama Desktop or: ${BOLD}ollama serve${RESET}`);
     issues.push("Ollama not running");
+    return { ollamaOk: false, modelOk: false };
   }
+
+  const ids = models.data.map((m) => m.id);
+  log("ok", `Ollama reachable at ${OLLAMA_BASE} — ${ids.length} model(s) available`);
+
+  const configured = process.env.SIFT_LLM_MODEL ?? OLLAMA_DEFAULT_MODEL;
+  const exact = ids.find((id) => id === configured);
+  const partial = ids.find((id) => id.startsWith(configured.split(":")[0]));
+  const found = exact ?? partial;
+
+  if (found) {
+    log("ok", `Model available: ${BOLD}${found}${RESET}${modelMatchLabel(found, configured)}`);
+    return { ollamaOk: true, modelOk: true };
+  }
+
+  log("warn", `Model ${BOLD}${configured}${RESET} not found in Ollama`);
+  log("info", `Available: ${modelAvailableList(ids)}`);
+  log("info", `Run: ${BOLD}ollama pull ${configured}${RESET}  or change model in Settings`);
+  issues.push(`Model "${configured}" not in Ollama`);
+  return { ollamaOk: true, modelOk: false };
+}
+
+async function runCheck(opts = {}) {
+  const { quiet = false } = opts;
+  const issues = [];
+
+  if (!quiet) header("Pre-flight checks");
+
+  checkNode(issues);
+  checkRust(issues);
+  checkDeps(issues);
+  const { ollamaOk, modelOk } = await checkOllama(issues);
 
   // Summary
   if (!quiet) {
@@ -319,6 +336,9 @@ ${BOLD}Commands:${RESET}
 
   ${BOLD}stop${RESET}     Kill any processes running on the Sift ports (4000, 1420).
 
+  ${BOLD}package${RESET}  Compile backend TypeScript and bundle it into a Windows
+           standalone executable in src-tauri/binaries/ using pkg.
+
   ${BOLD}help${RESET}     Show this message.
 
 ${BOLD}Ollama:${RESET}
@@ -349,6 +369,22 @@ switch (cmd) {
   case "stop":
     runStop();
     break;
+  case "package": {
+    header("Packaging backend sidecar");
+    log("info", "npm run package — backend → src-tauri/binaries/");
+    const pkgResult = spawnSync("npm", ["run", "package"], {
+      cwd: join(ROOT, "backend"),
+      stdio: "inherit",
+      shell: process.platform === "win32",
+    });
+    if (pkgResult.status !== 0) {
+      log("fail", "Backend packaging failed");
+      process.exit(1);
+    }
+    log("ok", "sift-backend-x86_64-pc-windows-msvc.exe written to src-tauri/binaries/");
+    console.log("");
+    break;
+  }
   case "help":
   case "--help":
   case "-h":

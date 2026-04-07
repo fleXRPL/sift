@@ -9,10 +9,13 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "jest --coverage --forceExit",
     "test:watch": "jest --watch",
-    "package": "npm run build && pkg package.json --output ../src-tauri/binaries/sift-backend"
+    "package": "npm run build && pkg package.json --no-bytecode --public --public-packages \"*\" --output ../src-tauri/binaries/sift-backend-x86_64-pc-windows-msvc"
   },
   "pkg": {
-    "assets": [],
+    "assets": [
+      "node_modules/better-sqlite3/build/Release/*.node",
+      "node_modules/better-sqlite3/prebuilds/**/*"
+    ],
     "targets": [
       "node18-win-x64"
     ],

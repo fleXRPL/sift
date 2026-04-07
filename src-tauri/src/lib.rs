@@ -16,6 +16,17 @@ use tauri::{
     AppHandle, Emitter, Manager, State,
 };
 
+// ── Sidecar (production only) ─────────────────────────────────────────────────
+
+#[cfg(not(debug_assertions))]
+use tauri_plugin_shell::process::CommandChild;
+
+/// Holds the backend sidecar process so it can be killed on exit.
+#[cfg(not(debug_assertions))]
+pub struct SidecarHandle(pub Mutex<Option<CommandChild>>);
+
+// ── File watcher ──────────────────────────────────────────────────────────────
+
 struct WatchInner {
     cancel: Arc<AtomicBool>,
     handle: Option<JoinHandle<()>>,
@@ -127,45 +138,91 @@ fn set_watch_folder(
     Ok(())
 }
 
+// ── App entry point ───────────────────────────────────────────────────────────
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_shell::init())
         .manage(WatchState {
             inner: Mutex::new(WatchInner {
                 cancel: Arc::new(AtomicBool::new(false)),
                 handle: None,
             }),
-        })
-        .setup(|app| {
-            let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
-            let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show, &quit])?;
+        });
 
-            let icon = app
-                .default_window_icon()
-                .ok_or("missing default window icon")?
-                .clone();
+    builder = builder.setup(|app| {
+        // ── Sidecar: spawn backend in production builds only ──────────────
+        #[cfg(not(debug_assertions))]
+        {
+            use tauri_plugin_shell::ShellExt;
 
-            let _tray = TrayIconBuilder::new()
-                .icon(icon)
-                .menu(&menu)
-                .show_menu_on_left_click(false)
-                .on_menu_event(move |app, event| match event.id.as_ref() {
-                    "quit" => app.exit(0),
-                    "show" => {
-                        if let Some(w) = app.get_webview_window("main") {
-                            let _ = w.show();
-                            let _ = w.set_focus();
+            let sidecar_cmd = app
+                .shell()
+                .sidecar("sift-backend")
+                .map_err(|e| format!("sidecar build failed: {e}"))?;
+
+            let (_rx, child) = sidecar_cmd
+                .spawn()
+                .map_err(|e| format!("sidecar spawn failed: {e}"))?;
+
+            app.manage(SidecarHandle(Mutex::new(Some(child))));
+
+            // Poll until the backend is ready (up to 15 s).
+            let ready = (0..30).any(|_| {
+                std::thread::sleep(Duration::from_millis(500));
+                reqwest::blocking::get("http://127.0.0.1:4000/health")
+                    .map(|r| r.status().is_success())
+                    .unwrap_or(false)
+            });
+            if !ready {
+                eprintln!("[sift] backend sidecar did not become ready in time");
+            }
+        }
+
+        // ── System tray ───────────────────────────────────────────────────
+        let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
+        let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+        let menu = Menu::with_items(app, &[&show, &quit])?;
+
+        let icon = app
+            .default_window_icon()
+            .ok_or("missing default window icon")?
+            .clone();
+
+        let _tray = TrayIconBuilder::new()
+            .icon(icon)
+            .menu(&menu)
+            .show_menu_on_left_click(false)
+            .on_menu_event(move |app, event| match event.id.as_ref() {
+                "quit" => {
+                    // Kill the backend sidecar before exiting.
+                    #[cfg(not(debug_assertions))]
+                    if let Some(handle) = app.try_state::<SidecarHandle>() {
+                        if let Ok(mut guard) = handle.0.lock() {
+                            if let Some(child) = guard.take() {
+                                let _ = child.kill();
+                            }
                         }
                     }
-                    _ => {}
-                })
-                .build(app)?;
+                    app.exit(0);
+                }
+                "show" => {
+                    if let Some(w) = app.get_webview_window("main") {
+                        let _ = w.show();
+                        let _ = w.set_focus();
+                    }
+                }
+                _ => {}
+            })
+            .build(app)?;
 
-            Ok(())
-        })
+        Ok(())
+    });
+
+    builder
         .invoke_handler(tauri::generate_handler![set_watch_folder])
         .run(tauri::generate_context!())
         .expect("error while running Sift");
