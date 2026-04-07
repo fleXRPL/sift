@@ -53,4 +53,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ filePath }),
     }),
+  deleteDocument: (id: string) =>
+    j<{ deleted: string }>(`/api/documents/${id}`, { method: "DELETE" }),
 };

@@ -1,10 +1,14 @@
 import express from "express";
 import cors from "cors";
+import fs from "node:fs";
+import path from "node:path";
 import type { Database } from "better-sqlite3";
 import { z } from "zod";
 import { getSetting, setSetting } from "./db";
 import { ingestFile } from "./ingest";
 import { DEFAULT_LLM_BASE_URL, DEFAULT_LLM_MODEL } from "./llmDefaults";
+
+const INGESTABLE_EXTENSIONS = new Set([".json", ".hl7", ".pdf", ".txt"]);
 
 export function createApp(db: Database) {
   const app = express();
@@ -120,6 +124,41 @@ export function createApp(db: Database) {
       ...row,
       summary_preview: row.summary_text ? row.summary_text.slice(0, 220) : null,
     });
+  });
+
+  app.delete("/api/documents/:id", (req, res) => {
+    const { changes } = db.prepare("DELETE FROM documents WHERE id = ?").run(req.params.id);
+    if (changes === 0) {
+      res.status(404).json({ error: "not found" });
+      return;
+    }
+    res.json({ deleted: req.params.id });
+  });
+
+  app.post("/api/scan", async (_req, res) => {
+    const watchFolder = getSetting(db, "watch_folder");
+    if (!watchFolder) {
+      res.status(400).json({ error: "No watch folder configured" });
+      return;
+    }
+    let queued = 0;
+    try {
+      const entries = fs.readdirSync(watchFolder);
+      const files = entries
+        .filter((e) => INGESTABLE_EXTENSIONS.has(path.extname(e).toLowerCase()))
+        .map((e) => path.join(watchFolder, e));
+
+      for (const filePath of files) {
+        void ingestFile(db, filePath).catch((err: unknown) => {
+          console.error(`[Sift] scan ingest error ${filePath}:`, err);
+        });
+        queued++;
+      }
+      res.json({ queued, folder: watchFolder });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      res.status(500).json({ error: msg });
+    }
   });
 
   app.post("/ingest", (req, res) => {

@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import type Database from "better-sqlite3";
 import { extractFromFhirJson } from "./pipelines/fhir";
@@ -18,7 +18,7 @@ function detectKind(filePath: string, rawText: string): "fhir" | "hl7" | "pdf" |
   const ext = path.extname(filePath).toLowerCase();
   if (ext === ".json" || ext === ".xml") {
     const t = rawText.trimStart();
-    if (t.startsWith("{") && (t.includes('"resourceType"') || t.includes('"resourceType"'))) return "fhir";
+    if (t.startsWith("{") && t.includes('"resourceType"')) return "fhir";
   }
   if (ext === ".hl7" || ext === ".txt") {
     if (looksLikeHl7(rawText)) return "hl7";
@@ -90,6 +90,13 @@ export async function ingestFile(db: Database.Database, filePath: string): Promi
   }
 
   const kind = ext === ".pdf" ? "pdf" : detectKind(normalized, rawText);
+
+  // Write a 'processing' row immediately so the UI shows the file right away.
+  db.prepare(
+    `INSERT INTO documents (id, file_path, file_name, source_type, status)
+     VALUES (?, ?, ?, ?, 'processing')`,
+  ).run(id, normalized, fileName, kind);
+
   const ctx = await buildContext(kind, normalized, rawText);
 
   const llmBase = getSetting(db, "llm_base_url") ?? process.env.SIFT_LLM_BASE_URL ?? DEFAULT_LLM_BASE_URL;
@@ -115,10 +122,10 @@ export async function ingestFile(db: Database.Database, filePath: string): Promi
   }
 
   db.prepare(
-    `INSERT INTO documents (
-      id, file_path, file_name, source_type, status, raw_preview, summary_text, confidence, error_message
-    ) VALUES (?, ?, ?, ?, 'complete', ?, ?, ?, ?)`,
-  ).run(id, normalized, fileName, kind, ctx.preview.slice(0, 65000), summary, confidence, err);
+    `UPDATE documents
+     SET status = 'complete', raw_preview = ?, summary_text = ?, confidence = ?, error_message = ?
+     WHERE id = ?`,
+  ).run(ctx.preview.slice(0, 65000), summary, confidence, err, id);
 
   return { documentId: id, status: "complete" };
 }
