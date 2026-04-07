@@ -1,0 +1,95 @@
+SPRINGFIELD CARDIOLOGY ASSOCIATES
+1200 Medical Plaza Drive, Suite 400
+Springfield, IL 62704
+Tel: (217) 555-8800  Fax: (217) 555-8801
+
+DATE: March 20, 2026
+RE: Patient Referral — Cardiology Consultation
+
+TO: Dr. Patricia Okonkwo, MD
+    Springfield Internal Medicine Group
+
+FROM: Dr. James Whitfield, MD, FACC
+      Interventional Cardiology
+
+PATIENT: Thomas R. Beaumont
+DOB: 09/14/1951  |  MRN: SCA-10392
+INSURANCE: Medicare Part B  |  ID: 1EG4-TE5-MK72
+
+Dear Dr. Okonkwo,
+
+Thank you for referring Mr. Beaumont for cardiology evaluation. I saw him in my
+office on March 18, 2026 for a new patient consultation regarding exertional
+chest pain and dyspnea on exertion.
+
+PRESENTING COMPLAINT:
+Mr. Beaumont is a 74-year-old male with a 3-week history of progressive exertional
+chest tightness and shortness of breath occurring with moderate activity (walking
+two blocks, climbing one flight of stairs). He denies rest pain, orthopnea, or
+paroxysmal nocturnal dyspnea. One episode of near-syncope occurred last Tuesday
+while mowing the lawn.
+
+PAST MEDICAL HISTORY:
+- Coronary artery disease, 3-vessel (catheterization 2019 — 70% LAD stenosis,
+  60% RCA stenosis, managed medically)
+- Hypertension (15+ years, currently controlled)
+- Hyperlipidemia
+- Type 2 diabetes mellitus (diet-controlled)
+- Prior tobacco use — 30 pack-years, quit 2008
+
+CURRENT MEDICATIONS:
+- Aspirin 81 mg daily
+- Carvedilol 12.5 mg twice daily
+- Lisinopril 20 mg daily
+- Atorvastatin 80 mg nightly
+- Amlodipine 5 mg daily
+- Metformin 500 mg twice daily
+
+ALLERGIES: Clopidogrel (rash), Sulfa drugs (anaphylaxis)
+
+EXAMINATION FINDINGS (03/18/2026):
+- BP: 138/84 mmHg (right arm), HR: 68 bpm (regular), SpO2: 96% on room air
+- Weight: 201 lbs, BMI: 28.9
+- Cardiovascular: Regular rate and rhythm. Grade II/VI systolic murmur at RUSB.
+  No S3/S4. JVP not elevated.
+- Respiratory: Clear to auscultation bilaterally, no crackles.
+- Extremities: Trace bilateral ankle edema.
+
+DIAGNOSTIC RESULTS:
+- 12-lead ECG (03/18/2026): Normal sinus rhythm. Left ventricular hypertrophy
+  by voltage. Old inferior Q waves (leads II, III, aVF) consistent with prior
+  inferior MI — NOTE: this was not documented in prior records. Possible silent MI.
+- Echocardiogram (03/18/2026): LVEF 45% (mildly reduced, previously 60% in 2022).
+  Inferior wall hypokinesis. Mild mitral regurgitation. No pericardial effusion.
+- BNP: 410 pg/mL (elevated; reference <100 pg/mL)
+- Troponin I (x2, 3h apart): 0.02 ng/mL, 0.02 ng/mL (negative for acute MI)
+
+IMPRESSION:
+1. New wall motion abnormality (inferior hypokinesis) with decline in LVEF from
+   60% to 45% — highly suspicious for interval silent MI or ischemic
+   cardiomyopathy progression.
+2. Exertional symptoms consistent with heart failure with mildly reduced EF
+   (HFmrEF) and/or active ischemia.
+3. Elevated BNP supporting volume overload / early decompensation.
+4. Previously undocumented inferior MI pattern on ECG.
+
+PLAN:
+1. Admitting Mr. Beaumont directly to Springfield Memorial Hospital for further
+   evaluation and monitoring. Cardiology team notified.
+2. Nuclear stress test scheduled for 03/21/2026 to assess ischemic burden.
+3. Coronary angiography likely indicated if stress test confirms ischemia —
+   previously placed on medical management but clinical picture has changed.
+4. Initiating low-dose furosemide 20 mg daily for fluid management.
+5. Increasing carvedilol to 25 mg twice daily as tolerated.
+6. GDMT optimization per current HFmrEF guidelines.
+7. Patient educated on daily weight monitoring, sodium restriction (<2g/day),
+   and activity limitations. Return to cardiology within 1 week post-discharge.
+
+Please feel free to contact my office directly at (217) 555-8800 with any questions.
+We will keep you updated on Mr. Beaumont's hospital course.
+
+Sincerely,
+
+Dr. James Whitfield, MD, FACC
+Interventional Cardiology
+Springfield Cardiology Associates

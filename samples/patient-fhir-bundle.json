@@ -1,0 +1,154 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pt-00123",
+        "name": [{ "family": "Hartwell", "given": ["Margaret", "Ann"], "use": "official" }],
+        "birthDate": "1958-03-14",
+        "gender": "female",
+        "telecom": [{ "system": "phone", "value": "555-304-1192", "use": "home" }],
+        "address": [{ "line": ["44 Birchwood Lane"], "city": "Springfield", "state": "IL", "postalCode": "62704" }]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-001",
+        "subject": { "reference": "Patient/pt-00123" },
+        "code": {
+          "coding": [{ "system": "http://snomed.info/sct", "code": "44054006", "display": "Type 2 diabetes mellitus" }]
+        },
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "onsetDateTime": "2014-07-22",
+        "note": [{ "text": "Poorly controlled. A1c trending up over last 18 months." }]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-002",
+        "subject": { "reference": "Patient/pt-00123" },
+        "code": {
+          "coding": [{ "system": "http://snomed.info/sct", "code": "38341003", "display": "Hypertension" }]
+        },
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "onsetDateTime": "2011-02-10"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-003",
+        "subject": { "reference": "Patient/pt-00123" },
+        "code": {
+          "coding": [{ "system": "http://snomed.info/sct", "code": "267425008", "display": "Chronic kidney disease stage 3" }]
+        },
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "onsetDateTime": "2021-09-15",
+        "note": [{ "text": "eGFR 42 on last draw. Nephrology follow-up recommended." }]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-001",
+        "subject": { "reference": "Patient/pt-00123" },
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "860975", "display": "Metformin 1000 mg oral tablet" }]
+        },
+        "dosageInstruction": [{ "text": "1 tablet twice daily with meals" }]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-002",
+        "subject": { "reference": "Patient/pt-00123" },
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "29046", "display": "Lisinopril 10 mg oral tablet" }]
+        },
+        "dosageInstruction": [{ "text": "1 tablet once daily" }]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-003",
+        "subject": { "reference": "Patient/pt-00123" },
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "83367", "display": "Atorvastatin 40 mg oral tablet" }]
+        },
+        "dosageInstruction": [{ "text": "1 tablet at bedtime" }]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-001",
+        "subject": { "reference": "Patient/pt-00123" },
+        "status": "final",
+        "code": {
+          "coding": [{ "system": "http://loinc.org", "code": "4548-4", "display": "Hemoglobin A1c/Hemoglobin.total in Blood" }]
+        },
+        "effectiveDateTime": "2026-01-18",
+        "valueQuantity": { "value": 8.9, "unit": "%", "system": "http://unitsofmeasure.org" },
+        "interpretation": [{ "coding": [{ "code": "H", "display": "High" }] }]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-002",
+        "subject": { "reference": "Patient/pt-00123" },
+        "status": "final",
+        "code": {
+          "coding": [{ "system": "http://loinc.org", "code": "2160-0", "display": "Creatinine [Mass/volume] in Serum or Plasma" }]
+        },
+        "effectiveDateTime": "2026-01-18",
+        "valueQuantity": { "value": 1.8, "unit": "mg/dL", "system": "http://unitsofmeasure.org" },
+        "interpretation": [{ "coding": [{ "code": "H", "display": "High" }] }]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-003",
+        "subject": { "reference": "Patient/pt-00123" },
+        "status": "final",
+        "code": {
+          "coding": [{ "system": "http://loinc.org", "code": "55284-4", "display": "Blood pressure systolic and diastolic" }]
+        },
+        "effectiveDateTime": "2026-01-18",
+        "component": [
+          {
+            "code": { "coding": [{ "code": "8480-6", "display": "Systolic blood pressure" }] },
+            "valueQuantity": { "value": 148, "unit": "mmHg" }
+          },
+          {
+            "code": { "coding": [{ "code": "8462-4", "display": "Diastolic blood pressure" }] },
+            "valueQuantity": { "value": 92, "unit": "mmHg" }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-001",
+        "patient": { "reference": "Patient/pt-00123" },
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "7980", "display": "Penicillin" }] },
+        "reaction": [{ "manifestation": [{ "coding": [{ "display": "Anaphylaxis" }] }], "severity": "severe" }]
+      }
+    }
+  ]
+}
