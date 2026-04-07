@@ -10,18 +10,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ── Backend ────────────────────────────────────────────────────────────────
   backend:
     name: Backend (Node + Jest)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "lts/*"
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
@@ -29,38 +31,61 @@ jobs:
         run: npm ci
 
       - name: Typecheck
-        run: npx tsc --noEmit
+        run: npx tsc -p tsconfig.build.json --noEmit
 
-      - name: Test
+      - name: Test (with coverage)
         run: npm test
 
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+          retention-days: 14
+
+  # ── Frontend ───────────────────────────────────────────────────────────────
   frontend:
     name: Frontend (Vitest + build)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "lts/*"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install
         run: npm ci
 
-      - name: Test
-        run: npm test
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test (with coverage)
+        run: npm test -- --coverage
+
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 14
 
       - name: Production build
         run: npm run build
 
+  # ── Tauri / Rust ───────────────────────────────────────────────────────────
   tauri-host:
     name: Tauri host (cargo check)
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -68,7 +93,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev patchelf
 
       - uses: dtolnay/rust-toolchain@stable
 

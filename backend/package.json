@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "ts-node --transpile-only src/index.ts",
     "build": "tsc -p tsconfig.build.json",
-    "test": "jest --coverage",
+    "test": "jest --coverage --forceExit",
     "test:watch": "jest --watch",
     "package": "npm run build && pkg package.json --output ../src-tauri/binaries/sift-backend"
   },
