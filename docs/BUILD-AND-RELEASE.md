@@ -74,18 +74,116 @@ src-tauri/target/release/bundle/nsis/Sift_<version>_x64-setup.exe
 
 ---
 
-## GitHub Actions — automated Windows release
+## CI — `cargo check` and the sidecar stub
 
-Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
+Tauri's build script validates that every `externalBin` entry exists on disk with the correct
+target-triple suffix before compiling — even during `cargo check`. Because the real backend
+binary is only produced in the release workflow (on Windows), CI would fail if it ran
+`cargo check` against an empty `binaries/` directory.
 
-### Triggering a release
+The `tauri-host` job in `ci.yml` works around this by creating a zero-byte stub before
+`cargo check` runs:
 
-Push a version tag:
+```yaml
+- name: Create sidecar stub for cargo check
+  run: |
+    mkdir -p src-tauri/binaries
+    touch src-tauri/binaries/sift-backend-x86_64-unknown-linux-gnu
+    chmod +x src-tauri/binaries/sift-backend-x86_64-unknown-linux-gnu
+```
+
+Tauri's build script only checks existence, not content, so the type-check passes cleanly.
+The real binary is built and verified only in `release.yml` on `windows-latest`.
+
+---
+
+## Release workflow
+
+Sift uses a **release branch** pattern: all feature work lands on `main`, a
+dedicated `release/vX.Y.Z` branch is used to finalise the changelog and bump
+versions, that branch is PR'd back to `main`, and the tag is pushed only after
+the PR merges. This keeps the changelog reviewed and the tag pointing at a clean,
+deliberate commit.
+
+### Step-by-step release process
+
+#### 1. Finish feature work on `main`
+
+Merge all feature PRs to `main` as normal. CI must be green before proceeding.
+
+#### 2. Create a release branch
 
 ```bash
+git checkout main && git pull origin main
+git checkout -b release/v0.2.0
+```
+
+#### 3. Bump versions (keep all three in sync)
+
+| File | Field |
+| ---- | ----- |
+| `src-tauri/tauri.conf.json` | `"version"` |
+| `src-tauri/Cargo.toml` | `version` |
+| Root `package.json` | `"version"` |
+
+#### 4. Update `CHANGELOG.md`
+
+Move items from `## [Unreleased]` into a new versioned section:
+
+```markdown
+## [0.2.0] — YYYY-MM-DD
+
+### Added
+- …
+
+### Fixed
+- …
+
+### Changed
+- …
+```
+
+Add the comparison link at the bottom:
+
+```markdown
+[0.2.0]: https://github.com/fleXRPL/sift/compare/v0.1.0...v0.2.0
+```
+
+Update the `[Unreleased]` link to point from the new tag:
+
+```markdown
+[Unreleased]: https://github.com/fleXRPL/sift/compare/v0.2.0...HEAD
+```
+
+#### 5. Commit and push the release branch
+
+```bash
+git add CHANGELOG.md src-tauri/tauri.conf.json src-tauri/Cargo.toml package.json
+git commit -m "chore: release v0.2.0"
+git push origin release/v0.2.0
+```
+
+#### 6. Open a PR: `release/v0.2.0 → main`
+
+- Title: `chore: release v0.2.0`
+- Body: paste the new CHANGELOG section as context for reviewers
+- Wait for CI to pass, get approval, then **Squash and merge**
+
+#### 7. Pull `main` locally and tag
+
+```bash
+git checkout main && git pull origin main
 git tag v0.2.0
 git push origin v0.2.0
 ```
+
+Pushing the tag triggers `release.yml` automatically.
+
+---
+
+## GitHub Actions — automated Windows release
+
+Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 
 The `release.yml` workflow runs on `windows-latest` and:
 
@@ -94,8 +192,9 @@ The `release.yml` workflow runs on `windows-latest` and:
 3. Bundles backend sidecar with `pkg` → `src-tauri/binaries/`
 4. Verifies the `.exe` exists and prints its size
 5. Runs `npx tauri build` (with `CI=false`)
-6. Uploads the NSIS `.exe` as a **GitHub Release asset** (auto-generated release notes)
-7. Also saves the installer as a workflow **artifact** (30-day retention) for non-tag builds
+6. Extracts the matching `CHANGELOG.md` section for the tag version
+7. Creates a **GitHub Release** with the changelog body and attaches the NSIS `.exe`
+8. Also saves the installer as a workflow **artifact** (30-day retention)
 
 ### Manual test build (no tag needed)
 
