@@ -104,4 +104,4 @@ jobs:
 
       - name: cargo check
         working-directory: src-tauri
-        run: cargo check --locked
+        run: cargo check
