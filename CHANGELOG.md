@@ -13,6 +13,24 @@ _Changes staged for the next release go here during development._
 
 ---
 
+## [0.1.1] — 2026-04-28
+
+### Security
+
+- **vite** upgraded `6.4.1` → `6.4.2`, resolving two CVEs in the Vite dev server (arbitrary file read via WebSocket — GHSA-p9ff-h696-f583, High; path traversal in optimised deps `.map` handling — GHSA-4w7w-66w2-5vf9, Moderate)
+- **postcss** minimum bumped to `^8.5.10`, resolving a moderate XSS via unescaped `</style>` in CSS stringify output (GHSA-qx2v-qp2m-jg93)
+- **rustls-webpki** `0.103.10` → `0.103.13`, resolving three CVEs: DoS via panic on malformed CRL BIT STRING (High); name constraints accepted for wildcard certificates (Low); name constraints for URI names incorrectly accepted (Low)
+- **rand** `0.8.5` → `0.8.6` (transitive Tauri dependency; latest compatible patch)
+- Replaced abandoned `pkg` (`vercel/pkg`, GHSA-22r3-9w55-cj54 — Local Privilege Escalation) with `@yao-pkg/pkg`, the actively maintained community fork; no API changes required
+
+### Added
+
+- `deny.toml` — cargo-deny configuration documenting two advisories that cannot be resolved at the project level due to upstream tauri ecosystem constraints (glib `RUSTSEC-2024-0403`, rand 0.7.x `RUSTSEC-2025-0009`); suppressed with full justification
+- `backend/package.json` — `package:mac-arm` and `package:mac-x64` scripts for building the backend sidecar on macOS (Apple Silicon and Intel)
+- `sift.mjs package` — now auto-detects host platform and selects the correct packaging target (Windows, macOS ARM, macOS Intel)
+
+---
+
 ## [0.1.0] — 2026-04-08
 
 ### Added
@@ -47,5 +65,6 @@ _Changes staged for the next release go here during development._
 
 ---
 
-[Unreleased]: https://github.com/fleXRPL/sift/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/fleXRPL/sift/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/fleXRPL/sift/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/fleXRPL/sift/releases/tag/v0.1.0
