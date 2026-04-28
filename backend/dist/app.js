@@ -6,9 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createApp = createApp;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const node_fs_1 = __importDefault(require("node:fs"));
+const node_path_1 = __importDefault(require("node:path"));
 const zod_1 = require("zod");
 const db_1 = require("./db");
 const ingest_1 = require("./ingest");
+const llmDefaults_1 = require("./llmDefaults");
+const INGESTABLE_EXTENSIONS = new Set([".json", ".hl7", ".pdf", ".txt"]);
 function createApp(db) {
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)({ origin: true }));
@@ -24,8 +28,8 @@ function createApp(db) {
     app.get("/api/settings", (_req, res) => {
         const rawWatch = (0, db_1.getSetting)(db, "watch_folder");
         const watch_folder = rawWatch && rawWatch.length > 0 ? rawWatch : null;
-        const llm_base_url = (0, db_1.getSetting)(db, "llm_base_url") ?? "http://127.0.0.1:8080/v1";
-        const llm_model = (0, db_1.getSetting)(db, "llm_model") ?? "local-model";
+        const llm_base_url = (0, db_1.getSetting)(db, "llm_base_url") ?? llmDefaults_1.DEFAULT_LLM_BASE_URL;
+        const llm_model = (0, db_1.getSetting)(db, "llm_model") ?? llmDefaults_1.DEFAULT_LLM_MODEL;
         res.json({
             watch_folder,
             llm_base_url,
@@ -49,8 +53,8 @@ function createApp(db) {
         const watch_folder = wf && wf.length > 0 ? wf : null;
         res.json({
             watch_folder,
-            llm_base_url: (0, db_1.getSetting)(db, "llm_base_url") ?? "http://127.0.0.1:8080/v1",
-            llm_model: (0, db_1.getSetting)(db, "llm_model") ?? "local-model",
+            llm_base_url: (0, db_1.getSetting)(db, "llm_base_url") ?? llmDefaults_1.DEFAULT_LLM_BASE_URL,
+            llm_model: (0, db_1.getSetting)(db, "llm_model") ?? llmDefaults_1.DEFAULT_LLM_MODEL,
         });
     });
     const IngestBody = zod_1.z.object({
@@ -93,6 +97,39 @@ function createApp(db) {
             ...row,
             summary_preview: row.summary_text ? row.summary_text.slice(0, 220) : null,
         });
+    });
+    app.delete("/api/documents/:id", (req, res) => {
+        const { changes } = db.prepare("DELETE FROM documents WHERE id = ?").run(req.params.id);
+        if (changes === 0) {
+            res.status(404).json({ error: "not found" });
+            return;
+        }
+        res.json({ deleted: req.params.id });
+    });
+    app.post("/api/scan", async (_req, res) => {
+        const watchFolder = (0, db_1.getSetting)(db, "watch_folder");
+        if (!watchFolder) {
+            res.status(400).json({ error: "No watch folder configured" });
+            return;
+        }
+        let queued = 0;
+        try {
+            const entries = node_fs_1.default.readdirSync(watchFolder);
+            const files = entries
+                .filter((e) => INGESTABLE_EXTENSIONS.has(node_path_1.default.extname(e).toLowerCase()))
+                .map((e) => node_path_1.default.join(watchFolder, e));
+            for (const filePath of files) {
+                void (0, ingest_1.ingestFile)(db, filePath).catch((err) => {
+                    console.error(`[Sift] scan ingest error ${filePath}:`, err);
+                });
+                queued++;
+            }
+            res.json({ queued, folder: watchFolder });
+        }
+        catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            res.status(500).json({ error: msg });
+        }
     });
     app.post("/ingest", (req, res) => {
         const fileName = typeof req.body?.fileName === "string" ? req.body.fileName : "";

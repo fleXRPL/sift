@@ -4,19 +4,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ingestFile = ingestFile;
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
+const node_fs_1 = __importDefault(require("node:fs"));
+const node_path_1 = __importDefault(require("node:path"));
 const uuid_1 = require("uuid");
 const fhir_1 = require("./pipelines/fhir");
 const hl7_1 = require("./pipelines/hl7");
 const pdf_1 = require("./pipelines/pdf");
 const db_1 = require("./db");
 const llm_1 = require("./llm");
+const llmDefaults_1 = require("./llmDefaults");
 function detectKind(filePath, rawText) {
-    const ext = path_1.default.extname(filePath).toLowerCase();
+    const ext = node_path_1.default.extname(filePath).toLowerCase();
     if (ext === ".json" || ext === ".xml") {
         const t = rawText.trimStart();
-        if (t.startsWith("{") && (t.includes('"resourceType"') || t.includes('"resourceType"')))
+        if (t.startsWith("{") && t.includes('"resourceType"'))
             return "fhir";
     }
     if (ext === ".hl7" || ext === ".txt") {
@@ -64,30 +65,33 @@ async function buildContext(kind, filePath, rawText) {
     };
 }
 async function ingestFile(db, filePath) {
-    const normalized = path_1.default.resolve(filePath);
-    if (!fs_1.default.existsSync(normalized)) {
+    const normalized = node_path_1.default.resolve(filePath);
+    if (!node_fs_1.default.existsSync(normalized)) {
         throw new Error(`File not found: ${normalized}`);
     }
-    const stat = fs_1.default.statSync(normalized);
+    const stat = node_fs_1.default.statSync(normalized);
     if (!stat.isFile()) {
         throw new Error(`Not a file: ${normalized}`);
     }
     const id = (0, uuid_1.v4)();
-    const fileName = path_1.default.basename(normalized);
-    const ext = path_1.default.extname(normalized).toLowerCase();
+    const fileName = node_path_1.default.basename(normalized);
+    const ext = node_path_1.default.extname(normalized).toLowerCase();
     let rawText = "";
     if (ext !== ".pdf") {
         try {
-            rawText = fs_1.default.readFileSync(normalized, "utf8");
+            rawText = node_fs_1.default.readFileSync(normalized, "utf8");
         }
         catch {
             rawText = "";
         }
     }
     const kind = ext === ".pdf" ? "pdf" : detectKind(normalized, rawText);
+    // Write a 'processing' row immediately so the UI shows the file right away.
+    db.prepare(`INSERT INTO documents (id, file_path, file_name, source_type, status)
+     VALUES (?, ?, ?, ?, 'processing')`).run(id, normalized, fileName, kind);
     const ctx = await buildContext(kind, normalized, rawText);
-    const llmBase = (0, db_1.getSetting)(db, "llm_base_url") ?? process.env.SIFT_LLM_BASE_URL ?? "http://127.0.0.1:8080/v1";
-    const llmModel = (0, db_1.getSetting)(db, "llm_model") ?? process.env.SIFT_LLM_MODEL ?? "gpt-oss-20b";
+    const llmBase = (0, db_1.getSetting)(db, "llm_base_url") ?? process.env.SIFT_LLM_BASE_URL ?? llmDefaults_1.DEFAULT_LLM_BASE_URL;
+    const llmModel = (0, db_1.getSetting)(db, "llm_model") ?? process.env.SIFT_LLM_MODEL ?? llmDefaults_1.DEFAULT_LLM_MODEL;
     let summary;
     let confidence = ctx.baseConfidence;
     let err = null;
@@ -106,8 +110,8 @@ async function ingestFile(db, filePath) {
         summary = (0, llm_1.heuristicSummary)(ctx.label, ctx.preview);
         confidence = Math.max(0.15, confidence - 0.25);
     }
-    db.prepare(`INSERT INTO documents (
-      id, file_path, file_name, source_type, status, raw_preview, summary_text, confidence, error_message
-    ) VALUES (?, ?, ?, ?, 'complete', ?, ?, ?, ?)`).run(id, normalized, fileName, kind, ctx.preview.slice(0, 65000), summary, confidence, err);
+    db.prepare(`UPDATE documents
+     SET status = 'complete', raw_preview = ?, summary_text = ?, confidence = ?, error_message = ?
+     WHERE id = ?`).run(ctx.preview.slice(0, 65000), summary, confidence, err, id);
     return { documentId: id, status: "complete" };
 }

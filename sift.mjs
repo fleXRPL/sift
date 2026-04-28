@@ -371,8 +371,16 @@ switch (cmd) {
     break;
   case "package": {
     header("Packaging backend sidecar");
-    log("info", "npm run package — backend → src-tauri/binaries/");
-    const pkgResult = spawnSync("npm", ["run", "package"], {
+    let pkgScript;
+    if (process.platform === "win32") {
+      pkgScript = "package";
+    } else if (process.arch === "arm64") {
+      pkgScript = "package:mac-arm";
+    } else {
+      pkgScript = "package:mac-x64";
+    }
+    log("info", `npm run ${pkgScript} — backend → src-tauri/binaries/`);
+    const pkgResult = spawnSync("npm", ["run", pkgScript], {
       cwd: join(ROOT, "backend"),
       stdio: "inherit",
       shell: process.platform === "win32",
@@ -381,7 +389,7 @@ switch (cmd) {
       log("fail", "Backend packaging failed");
       process.exit(1);
     }
-    log("ok", "sift-backend-x86_64-pc-windows-msvc.exe written to src-tauri/binaries/");
+    log("ok", "Backend binary written to src-tauri/binaries/");
     console.log("");
     break;
   }
